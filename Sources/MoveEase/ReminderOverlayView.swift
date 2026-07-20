@@ -133,7 +133,7 @@ struct ReminderOverlayView: View {
                 Button {
                     reminder.finishBreak()
                 } label: {
-                    Label("提前完成活动", systemImage: "checkmark")
+                    Label("完成活动", systemImage: "checkmark")
                         .frame(width: 176, height: 42)
                         .background(MoveTheme.forest)
                         .foregroundStyle(.white)

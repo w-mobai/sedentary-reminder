@@ -139,11 +139,7 @@ final class ReminderManager: ObservableObject {
         remaining = max(0, deadline.timeIntervalSinceNow)
         guard remaining <= 0 else { return }
 
-        if phase == .focus {
-            beginBreak()
-        } else {
-            finishBreak()
-        }
+        if phase == .focus { beginBreak() }
     }
 
     private func beginBreak() {
