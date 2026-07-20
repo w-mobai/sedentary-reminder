@@ -65,10 +65,6 @@ final class ReminderManager: ObservableObject {
 
     var menuBarTitle: String { isPaused ? "已暂停" : clockText }
 
-    var isActivityRunning: Bool {
-        phase == .moving && !isPaused
-    }
-
     var nextReminderText: String {
         if isPaused { return "计时器已暂停" }
         let formatter = DateFormatter()
@@ -89,7 +85,7 @@ final class ReminderManager: ObservableObject {
     }
 
     func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        notificationCenter?.requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
     func togglePause() {
@@ -110,7 +106,7 @@ final class ReminderManager: ObservableObject {
     }
 
     func skipToBreak() {
-        beginBreak(showReminder: true)
+        beginBreak()
     }
 
     func startThreeSecondTest() {
@@ -120,15 +116,6 @@ final class ReminderManager: ObservableObject {
         pausedRemaining = nil
         remaining = 3
         deadline = Date().addingTimeInterval(3)
-    }
-
-    func startActivity() {
-        guard phase == .moving else { return }
-        let activityDuration = pausedRemaining ?? breakMinutes * 60
-        remaining = activityDuration
-        deadline = Date().addingTimeInterval(activityDuration)
-        pausedRemaining = nil
-        isPaused = false
     }
 
     func finishBreak() {
@@ -147,31 +134,22 @@ final class ReminderManager: ObservableObject {
         isPaused = false
     }
 
-    func applyDurations() {
-        overlay.dismiss()
-        restartTimer(for: .focus)
-    }
-
     private func tick() {
         guard !isPaused else { return }
         remaining = max(0, deadline.timeIntervalSinceNow)
         guard remaining <= 0 else { return }
 
         if phase == .focus {
-            beginBreak(showReminder: true)
+            beginBreak()
         } else {
             finishBreak()
         }
     }
 
-    private func beginBreak(showReminder: Bool) {
+    private func beginBreak() {
         restartTimer(for: .moving)
-        if showReminder {
-            pausedRemaining = remaining
-            isPaused = true
-            overlay.show()
-            sendSystemNotification()
-        }
+        overlay.show()
+        sendSystemNotification()
     }
 
     private func restartTimer(for newPhase: ReminderPhase) {
@@ -184,22 +162,30 @@ final class ReminderManager: ObservableObject {
     }
 
     private func sendSystemNotification() {
-        guard notificationsEnabled else { return }
+        guard notificationsEnabled, let notificationCenter else { return }
         let content = UNMutableNotificationContent()
         content.title = "该起身活动啦"
         content.body = "离开屏幕 \(Int(breakMinutes)) 分钟，走一走、喝口水，让身体松一松。"
         if soundEnabled { content.sound = .default }
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+        notificationCenter.add(request)
     }
 
     private func sendActivityCompleteNotification() {
-        guard notificationsEnabled else { return }
+        guard notificationsEnabled, let notificationCenter else { return }
         let content = UNMutableNotificationContent()
         content.title = "活动完成，回来继续吧"
         content.body = "下一轮 \(Int(focusMinutes)) 分钟专注已经开始。"
         if soundEnabled { content.sound = .default }
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+        notificationCenter.add(request)
+    }
+
+    /// Xcode runs Swift packages as standalone executables rather than app bundles.
+    /// UserNotifications aborts when no app bundle is available, so notifications
+    /// are enabled only for the packaged Move Ease.app build.
+    private var notificationCenter: UNUserNotificationCenter? {
+        guard Bundle.main.bundleURL.pathExtension == "app" else { return nil }
+        return UNUserNotificationCenter.current()
     }
 }

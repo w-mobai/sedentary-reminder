@@ -41,7 +41,6 @@ struct SecondaryScreenMask: View {
 
 struct ReminderOverlayView: View {
     @EnvironmentObject private var reminder: ReminderManager
-    @State private var appeared = false
 
     var body: some View {
         ZStack {
@@ -67,7 +66,7 @@ struct ReminderOverlayView: View {
                             .tracking(1.7)
                     }
                     Spacer()
-                    Text(reminder.isActivityRunning ? "活动进行中" : "活动 \(Int(reminder.breakMinutes)) 分钟")
+                    Text("活动进行中")
                         .font(.system(size: 11, weight: .bold))
                         .padding(.horizontal, 13)
                         .frame(height: 30)
@@ -75,13 +74,7 @@ struct ReminderOverlayView: View {
                         .clipShape(Capsule())
                 }
 
-                if reminder.isActivityRunning {
-                    activityTimerContent
-                        .transition(.opacity.combined(with: .scale(scale: 0.94)))
-                } else {
-                    reminderPromptContent
-                        .transition(.opacity.combined(with: .scale(scale: 0.94)))
-                }
+                activityTimerContent
             }
             .padding(28)
         }
@@ -90,59 +83,6 @@ struct ReminderOverlayView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 36, style: .continuous)
                 .stroke(MoveTheme.forest.opacity(0.12), lineWidth: 1)
-        }
-        .onAppear {
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.68).delay(0.08)) {
-                appeared = true
-            }
-        }
-        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: reminder.isActivityRunning)
-    }
-
-    private var reminderPromptContent: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            ZStack {
-                Circle()
-                    .fill(MoveTheme.forest)
-                    .frame(width: 98, height: 98)
-                Image(systemName: "figure.cooldown")
-                    .font(.system(size: 43, weight: .medium))
-                    .foregroundStyle(MoveTheme.lime)
-            }
-            .scaleEffect(appeared ? 1 : 0.55)
-            .opacity(appeared ? 1 : 0)
-
-            Text("该起身松一松啦")
-                .font(.system(size: 34, weight: .bold, design: .rounded))
-                .padding(.top, 18)
-            Text("看看远处，转转肩膀，再去接一杯水。\n屏幕会等你，身体也值得被照顾。")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(MoveTheme.inkMuted)
-                .multilineTextAlignment(.center)
-                .lineSpacing(5)
-                .padding(.top, 9)
-
-            Spacer()
-
-            HStack(spacing: 12) {
-                Button("5 分钟后提醒") { reminder.snooze() }
-                    .frame(width: 160, height: 44)
-                    .background(MoveTheme.mint)
-                    .clipShape(Capsule())
-                Button {
-                    reminder.startActivity()
-                } label: {
-                    Label("我去活动", systemImage: "arrow.right")
-                        .frame(width: 160, height: 44)
-                        .background(MoveTheme.forest)
-                        .foregroundStyle(.white)
-                        .clipShape(Capsule())
-                }
-            }
-            .buttonStyle(.plain)
-            .font(.system(size: 13, weight: .bold))
         }
     }
 
@@ -180,13 +120,25 @@ struct ReminderOverlayView: View {
 
             Spacer()
 
-            Button {
-                reminder.finishBreak()
-            } label: {
-                Label("提前完成活动", systemImage: "checkmark")
-                    .frame(width: 210, height: 42)
-                    .background(MoveTheme.mint)
-                    .clipShape(Capsule())
+            HStack(spacing: 12) {
+                Button {
+                    reminder.snooze()
+                } label: {
+                    Label("5分钟后提醒", systemImage: "clock.arrow.circlepath")
+                        .frame(width: 176, height: 42)
+                        .background(MoveTheme.mint)
+                        .clipShape(Capsule())
+                }
+
+                Button {
+                    reminder.finishBreak()
+                } label: {
+                    Label("提前完成活动", systemImage: "checkmark")
+                        .frame(width: 176, height: 42)
+                        .background(MoveTheme.forest)
+                        .foregroundStyle(.white)
+                        .clipShape(Capsule())
+                }
             }
             .buttonStyle(.plain)
             .font(.system(size: 12, weight: .bold))

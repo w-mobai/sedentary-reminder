@@ -287,20 +287,6 @@ private struct SettingsView: View {
             }
             .softCard(padding: 8)
 
-            HStack {
-                Text("调整时长后，点击应用会开始新一轮专注。")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(MoveTheme.inkMuted)
-                Spacer()
-                Button("应用设置") { reminder.applyDurations() }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 13, weight: .bold))
-                    .padding(.horizontal, 22)
-                    .frame(height: 42)
-                    .background(MoveTheme.forest)
-                    .foregroundStyle(.white)
-                    .clipShape(Capsule())
-            }
             Spacer()
         }
     }
