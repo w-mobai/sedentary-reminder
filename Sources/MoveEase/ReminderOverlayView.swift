@@ -84,6 +84,8 @@ struct ReminderOverlayView: View {
             RoundedRectangle(cornerRadius: 36, style: .continuous)
                 .stroke(MoveTheme.forest.opacity(0.12), lineWidth: 1)
         }
+        .foregroundStyle(MoveTheme.forest)
+        .preferredColorScheme(.light)
     }
 
     private var activityTimerContent: some View {

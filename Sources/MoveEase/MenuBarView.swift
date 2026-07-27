@@ -52,6 +52,8 @@ struct MenuBarView: View {
         }
         .padding(18)
         .frame(width: 300)
+        .background(MoveTheme.cream)
         .foregroundStyle(MoveTheme.forest)
+        .preferredColorScheme(.light)
     }
 }
