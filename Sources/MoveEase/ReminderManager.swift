@@ -47,6 +47,7 @@ final class ReminderManager: ObservableObject {
         notificationsEnabled = defaults.object(forKey: "notificationsEnabled") == nil ? true : defaults.bool(forKey: "notificationsEnabled")
         remaining = focusMinutes * 60
         deadline = Date().addingTimeInterval(remaining)
+        restoreDailyBreakCount()
     }
 
     var totalDuration: TimeInterval {
@@ -101,7 +102,6 @@ final class ReminderManager: ObservableObject {
 
     func restart() {
         overlay.dismiss()
-        completedBreaks = 0
         restartTimer(for: .focus)
     }
 
@@ -120,7 +120,9 @@ final class ReminderManager: ObservableObject {
 
     func finishBreak() {
         overlay.dismiss()
+        resetDailyBreakCountIfNeeded()
         completedBreaks += 1
+        saveDailyBreakCount()
         restartTimer(for: .focus)
         sendActivityCompleteNotification()
     }
@@ -135,6 +137,7 @@ final class ReminderManager: ObservableObject {
     }
 
     private func tick() {
+        resetDailyBreakCountIfNeeded()
         guard !isPaused else { return }
         remaining = max(0, deadline.timeIntervalSinceNow)
         guard remaining <= 0 else { return }
@@ -155,6 +158,31 @@ final class ReminderManager: ObservableObject {
         remaining = totalDuration
         deadline = Date().addingTimeInterval(remaining)
         if newPhase == .focus { sessionStartedAt = Date() }
+    }
+
+    private func resetDailyBreakCountIfNeeded(now: Date = Date()) {
+        let defaults = UserDefaults.standard
+        let savedDate = defaults.object(forKey: "completedBreaksDate") as? Date
+        let isToday = savedDate.map {
+            Calendar.autoupdatingCurrent.isDate($0, inSameDayAs: now)
+        } ?? false
+
+        guard !isToday else { return }
+
+        completedBreaks = 0
+        defaults.set(0, forKey: "completedBreaks")
+        defaults.set(now, forKey: "completedBreaksDate")
+    }
+
+    private func restoreDailyBreakCount(now: Date = Date()) {
+        resetDailyBreakCountIfNeeded(now: now)
+        completedBreaks = UserDefaults.standard.integer(forKey: "completedBreaks")
+    }
+
+    private func saveDailyBreakCount(now: Date = Date()) {
+        let defaults = UserDefaults.standard
+        defaults.set(completedBreaks, forKey: "completedBreaks")
+        defaults.set(now, forKey: "completedBreaksDate")
     }
 
     private func sendSystemNotification() {
