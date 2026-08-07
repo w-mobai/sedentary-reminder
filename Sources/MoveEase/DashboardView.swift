@@ -46,19 +46,18 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Image(systemName: "quote.opening")
                     .font(.system(size: 22))
-                    .foregroundStyle(MoveTheme.lime)
+                    .foregroundStyle(MoveTheme.inkMuted.opacity(0.42))
                 Text("照顾身体，\n也是工作的一部分。")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .lineSpacing(5)
+                    .foregroundStyle(MoveTheme.inkMuted.opacity(0.78))
                 Text("今天已经完成 \(reminder.completedBreaks) 次活动")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(MoveTheme.inkMuted)
+                    .foregroundStyle(MoveTheme.inkMuted.opacity(0.55))
             }
-            .padding(18)
+            .padding(.horizontal, 4)
+            .padding(.bottom, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(MoveTheme.forest)
-            .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .padding(24)
         .background(MoveTheme.mint.opacity(0.36))
@@ -280,13 +279,6 @@ private struct SettingsView: View {
             }
             .softCard(padding: 8)
 
-            VStack(spacing: 0) {
-                toggleRow(title: "桌面通知", subtitle: "到点后弹出置顶提醒", icon: "rectangle.inset.filled.and.person.filled", value: $reminder.notificationsEnabled)
-                Divider().overlay(MoveTheme.line).padding(.leading, 58)
-                toggleRow(title: "提醒声音", subtitle: "播放轻量系统提示音", icon: "speaker.wave.2.fill", value: $reminder.soundEnabled)
-            }
-            .softCard(padding: 8)
-
             Spacer()
         }
     }
@@ -304,19 +296,6 @@ private struct SettingsView: View {
                 .font(.system(size: 13, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .frame(width: 70, alignment: .trailing)
-        }
-        .padding(16)
-    }
-
-    private func toggleRow(title: String, subtitle: String, icon: String, value: Binding<Bool>) -> some View {
-        HStack(spacing: 16) {
-            settingIcon(icon)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 14, weight: .bold))
-                Text(subtitle).font(.system(size: 11, weight: .medium)).foregroundStyle(MoveTheme.inkMuted)
-            }
-            Spacer()
-            Toggle("", isOn: value).labelsHidden().toggleStyle(.switch).tint(MoveTheme.forest)
         }
         .padding(16)
     }

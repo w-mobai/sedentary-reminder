@@ -1,6 +1,5 @@
 import Foundation
 import SwiftUI
-import UserNotifications
 
 enum ReminderPhase: String {
     case focus
@@ -27,13 +26,6 @@ final class ReminderManager: ObservableObject {
     @Published var breakMinutes: Double {
         didSet { UserDefaults.standard.set(breakMinutes, forKey: "breakMinutes") }
     }
-    @Published var soundEnabled: Bool {
-        didSet { UserDefaults.standard.set(soundEnabled, forKey: "soundEnabled") }
-    }
-    @Published var notificationsEnabled: Bool {
-        didSet { UserDefaults.standard.set(notificationsEnabled, forKey: "notificationsEnabled") }
-    }
-
     private var deadline = Date().addingTimeInterval(45 * 60)
     private var pausedRemaining: TimeInterval?
     private var timer: Timer?
@@ -43,8 +35,6 @@ final class ReminderManager: ObservableObject {
         let defaults = UserDefaults.standard
         focusMinutes = defaults.object(forKey: "focusMinutes") == nil ? 45 : defaults.double(forKey: "focusMinutes")
         breakMinutes = defaults.object(forKey: "breakMinutes") == nil ? 5 : defaults.double(forKey: "breakMinutes")
-        soundEnabled = defaults.object(forKey: "soundEnabled") == nil ? true : defaults.bool(forKey: "soundEnabled")
-        notificationsEnabled = defaults.object(forKey: "notificationsEnabled") == nil ? true : defaults.bool(forKey: "notificationsEnabled")
         remaining = focusMinutes * 60
         deadline = Date().addingTimeInterval(remaining)
         restoreDailyBreakCount()
@@ -85,10 +75,6 @@ final class ReminderManager: ObservableObject {
         RunLoop.main.add(timer!, forMode: .common)
     }
 
-    func requestNotificationPermission() {
-        notificationCenter?.requestAuthorization(options: [.alert, .sound]) { _, _ in }
-    }
-
     func togglePause() {
         if isPaused {
             deadline = Date().addingTimeInterval(pausedRemaining ?? remaining)
@@ -124,7 +110,6 @@ final class ReminderManager: ObservableObject {
         completedBreaks += 1
         saveDailyBreakCount()
         restartTimer(for: .focus)
-        sendActivityCompleteNotification()
     }
 
     func snooze(minutes: Int = 5) {
@@ -148,7 +133,6 @@ final class ReminderManager: ObservableObject {
     private func beginBreak() {
         restartTimer(for: .moving)
         overlay.show()
-        sendSystemNotification()
     }
 
     private func restartTimer(for newPhase: ReminderPhase) {
@@ -185,31 +169,4 @@ final class ReminderManager: ObservableObject {
         defaults.set(now, forKey: "completedBreaksDate")
     }
 
-    private func sendSystemNotification() {
-        guard notificationsEnabled, let notificationCenter else { return }
-        let content = UNMutableNotificationContent()
-        content.title = "该起身活动啦"
-        content.body = "离开屏幕 \(Int(breakMinutes)) 分钟，走一走、喝口水，让身体松一松。"
-        if soundEnabled { content.sound = .default }
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        notificationCenter.add(request)
-    }
-
-    private func sendActivityCompleteNotification() {
-        guard notificationsEnabled, let notificationCenter else { return }
-        let content = UNMutableNotificationContent()
-        content.title = "活动完成，回来继续吧"
-        content.body = "下一轮 \(Int(focusMinutes)) 分钟专注已经开始。"
-        if soundEnabled { content.sound = .default }
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        notificationCenter.add(request)
-    }
-
-    /// Xcode runs Swift packages as standalone executables rather than app bundles.
-    /// UserNotifications aborts when no app bundle is available, so notifications
-    /// are enabled only for the packaged Move Ease.app build.
-    private var notificationCenter: UNUserNotificationCenter? {
-        guard Bundle.main.bundleURL.pathExtension == "app" else { return nil }
-        return UNUserNotificationCenter.current()
-    }
 }

@@ -49,7 +49,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
         ReminderManager.shared.start()
-        ReminderManager.shared.requestNotificationPermission()
     }
 
     @objc private func windowWillClose(_ notification: Notification) {
